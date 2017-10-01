@@ -1,4 +1,5 @@
 #include "scheduler.h"
+#include <stdio.h>
 
 extern THANDLER threads[MAXTHREAD];
 extern int currthread;
@@ -47,14 +48,16 @@ void scheduler(int arguments)
 
 		threads[callingthread].status=BLOCKED;
 		_enqueue(&waitinginevent[blockevent],callingthread);
-
 		changethread=1;
+
+		q=0;
 	}
 
 	if(event==ENDTHREAD)
 	{
 		threads[callingthread].status=END;
 		changethread=1;
+
 		q=0;
 	}
 	
