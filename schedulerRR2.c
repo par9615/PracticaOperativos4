@@ -4,19 +4,23 @@ extern THANDLER threads[MAXTHREAD];
 extern int currthread;
 extern int blockevent;
 extern int unblockevent;
+int q = 0;
+
 
 QUEUE ready;
 QUEUE waitinginevent[MAXTHREAD];
+
 
 void scheduler(int arguments)
 {
 	int old,next;
 	int changethread=0;
 	int waitingthread=0;
-	
+		
 	int event=arguments & 0xFF00;
 	int callingthread=arguments & 0xFF;
 
+	
 	if(event==NEWTHREAD)
 	{
 		// Un nuevo hilo va a la cola de listos
@@ -24,6 +28,20 @@ void scheduler(int arguments)
 		_enqueue(&ready,callingthread);
 	}
 	
+	if(event==TIMER)
+	{
+		q++;
+
+		if(q == 2)
+		{
+			threads[callingthread].status=READY;
+			_enqueue(&ready, callingthread);
+			changethread=1;
+			q = 0;
+		}
+
+	}
+
 	if(event==BLOCKTHREAD)
 	{
 
