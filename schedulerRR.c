@@ -26,9 +26,9 @@ void scheduler(int arguments)
 
 	if(event==TIMER)
 	{
-		threads[callingthread].status=READY;
-		_enqueue(&ready, callingthread);
-		changethread=1;
+		threads[callingthread].status=READY;	//Se pone el status del hilo actual en READY
+		_enqueue(&ready, callingthread);		//Se pone el hilo actual en la cola de listos
+		changethread=1;							//Se cambian los contextos
 
 	}
 	

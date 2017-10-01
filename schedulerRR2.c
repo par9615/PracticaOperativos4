@@ -4,7 +4,7 @@ extern THANDLER threads[MAXTHREAD];
 extern int currthread;
 extern int blockevent;
 extern int unblockevent;
-int q = 0;
+int q = 0;											//contador del quantum
 
 
 QUEUE ready;
@@ -30,14 +30,14 @@ void scheduler(int arguments)
 	
 	if(event==TIMER)
 	{
-		q++;
+		q++;										//Se incrementa conteo del quantum
 
-		if(q == 2)
+		if(q == 2)									//Se ha llegado al quantum
 		{
-			threads[callingthread].status=READY;
-			_enqueue(&ready, callingthread);
-			changethread=1;
-			q = 0;
+			threads[callingthread].status=READY;	//Se pone el estado del hilo actual en READY	
+			_enqueue(&ready, callingthread);		//Se pone el hilo actual en cola de listos
+			changethread=1;							//Se cambian los contextos
+			q = 0;									//Se resetea el conteo del quantum
 		}
 
 	}
@@ -55,6 +55,7 @@ void scheduler(int arguments)
 	{
 		threads[callingthread].status=END;
 		changethread=1;
+		q=0;
 	}
 	
 	if(event==UNBLOCKTHREAD)
