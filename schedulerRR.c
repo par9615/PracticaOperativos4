@@ -23,6 +23,14 @@ void scheduler(int arguments)
 		threads[callingthread].status=READY;
 		_enqueue(&ready,callingthread);
 	}
+
+	if(event==TIMER)
+	{
+		threads[callingthread].status=READY;
+		_enqueue(&ready, callingthread);
+		changethread=1;
+
+	}
 	
 	if(event==BLOCKTHREAD)
 	{
