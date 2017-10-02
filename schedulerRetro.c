@@ -1,26 +1,41 @@
 #include "scheduler.h"
-
-#define NQUEUES 10
+#include <stdio.h>
+#include <stdlib.h>
 
 extern THANDLER threads[MAXTHREAD];
 extern int currthread;
 extern int blockevent;
 extern int unblockevent;
 
-QUEUE ready[NQUEUES];
 QUEUE waitinginevent[MAXTHREAD];
+QUEUE *ready;
+QUEUE *actual;
+QUEUE *last;
 
-int first_not_empty()
+int queues;
+
+/*QUEUE* first_not_empty()
 {
-	for(int i = 0; i < NQUEUES; i++)
+	for(int i = 0; i < queues; i++)
 		if(!_emptyq(&ready[i]))
-			return i;
+			return &ready[i];
 
-	return -1;
+	return NULL;
+}*/
+
+void initialize()
+{
+	if (ready == NULL) {
+		ready = (QUEUE *)malloc(sizeof(QUEUE));
+		actual = &ready[0];
+		last = &ready[0];
+		queues = 1;
+	}
 }
 
 void scheduler(int arguments)
 {
+	initialize();
 	int old,next;
 	int changethread=0;
 	int waitingthread=0;
@@ -31,47 +46,69 @@ void scheduler(int arguments)
 	if(event==NEWTHREAD)
 	{
 		// Un nuevo hilo va a la cola de listos
+		printf("NEWTHREAD-inicio\n");
+		actual = &ready[0];
 		threads[callingthread].status=READY;
-		_enqueue(&ready[0],callingthread);		//Encola el nuevo hilo en la cola 0
+		_enqueue(actual,callingthread);		//Encola el nuevo hilo en la cola 0
+		printf("NEWTHREAD-fin\n");
 	}
 
 	if(event==TIMER)
 	{
-		thread[callingthread].status=READY;
-		_enqueue(&ready[(i+1)%NQUEUES],callingthread);
+		printf("TIMER-inicio\n");
+		if (actual == last) { // Agregar nueva cola
+			queues++;
+			ready = (QUEUE *)realloc(ready, sizeof(QUEUE) * queues); // Crea espacio para nueva cola
+			last = &ready[queues -1];
+		}
+
+		threads[callingthread].status=READY;
+		_enqueue(&(*(actual+1)),callingthread);
+		//if (first_not_empty() != NULL)
 		changethread=1;
+		printf("TIMER-fin\n");
 	}
 	
 	if(event==BLOCKTHREAD)
 	{
-
+		printf("BLOCKTHREAD-inicio\n");
 		threads[callingthread].status=BLOCKED;
 		_enqueue(&waitinginevent[blockevent],callingthread);
 
 		changethread=1;
+		printf("BLOCKTHREAD-fin\n");
 	}
 
 	if(event==ENDTHREAD)
 	{
+		printf("ENDTHREAD-inicio\n");
 		threads[callingthread].status=END;
 		changethread=1;
+		printf("ENDTHREAD-fin\n");
 	}
 	
 	if(event==UNBLOCKTHREAD)
 	{
+			printf("UNBLOCKTHREAD-inicio\n");
+			actual = &ready[0];
 			threads[callingthread].status=READY;
-			_enqueue(&ready[0],callingthread);
+			_enqueue(actual,callingthread);
+			printf("UNBLOCKTHREAD-fin\n");
 	}
 
 	
 	if(changethread)
 	{
-		int next_queue = first_not_empty();
+		printf("changethread-inicio\n");
+		//actual = first_not_empty();
 		old=currthread;
-		next=_dequeue(&ready[next_queue]);
+		next=_dequeue(actual);
+		if (_emptyq(actual))
+			actual = &(*(actual + 1));
 		
 		threads[next].status=RUNNING;
 		_swapthreads(old,next);
+		printf("changethread-fin\n");
 	}
 
 }
